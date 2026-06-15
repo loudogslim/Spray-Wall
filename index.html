@@ -835,6 +835,9 @@ function sizeCanvases(){
   });
   drawWall();
 }
+// Cache dimmed wall so pixel manipulation only runs once per climb selection
+var dimmedWallCache=null; // {wallId, activeId, canvas}
+
 function drawWall(){
   var wc=document.getElementById('wallCanvas');
   if(!wc.width||!wallImg) return;
@@ -842,41 +845,36 @@ function drawWall(){
   ctx.clearRect(0,0,wc.width,wc.height);
 
   if(phase==='climb'&&active){
-    // 1. Draw the full-colour wall on an offscreen canvas
-    var full=document.createElement('canvas');
-    full.width=wc.width; full.height=wc.height;
-    full.getContext('2d').drawImage(wallImg,0,0,wc.width,wc.height);
+    var cacheKey=activeWallId+'_'+active+'_'+wc.width;
 
-    // 2. Draw the dimmed wall as base
-    ctx.filter='grayscale(65%) brightness(0.38)';
-    ctx.drawImage(wallImg,0,0,wc.width,wc.height);
-    ctx.filter='none';
+    // Build or reuse dimmed base canvas
+    if(!dimmedWallCache||dimmedWallCache.key!==cacheKey){
+      var dc=document.createElement('canvas');
+      dc.width=wc.width; dc.height=wc.height;
+      var dctx=dc.getContext('2d');
+      dctx.drawImage(wallImg,0,0,wc.width,wc.height);
+      var imgData=dctx.getImageData(0,0,dc.width,dc.height);
+      var d=imgData.data;
+      for(var i=0;i<d.length;i+=4){
+        var grey=d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114;
+        d[i]  =Math.round((d[i]  *0.4+grey*0.6)*0.42);
+        d[i+1]=Math.round((d[i+1]*0.4+grey*0.6)*0.42);
+        d[i+2]=Math.round((d[i+2]*0.4+grey*0.6)*0.42);
+      }
+      dctx.putImageData(imgData,0,0);
+      dimmedWallCache={key:cacheKey, canvas:dc};
+    }
 
-    // 3. Get active hold polygons
+    // Draw cached dimmed base
+    ctx.drawImage(dimmedWallCache.canvas,0,0);
+
+    // Punch through full-colour inside active hold polygons
     var acl=climbs.find(function(c){return c.id===active;});
     if(acl&&acl.holds.length){
-      // Create a mask canvas: black everywhere, white inside hold shapes
-      var mask=document.createElement('canvas');
-      mask.width=wc.width; mask.height=wc.height;
-      var mctx=mask.getContext('2d');
-      mctx.fillStyle='#000';
-      mctx.fillRect(0,0,mask.width,mask.height);
-      mctx.fillStyle='#fff';
-      acl.holds.forEach(function(entry){
-        var hid=typeof entry==='object'?entry.id:entry;
-        var h=holds.find(function(h){return h.id===hid;});
-        if(!h||!h.pts||h.pts.length<3) return;
-        mctx.beginPath();
-        h.pts.forEach(function(p,i){ i===0?mctx.moveTo(p[0]*r,p[1]*r):mctx.lineTo(p[0]*r,p[1]*r); });
-        mctx.closePath();
-        mctx.fill();
-      });
-
-      // 4. Use the mask to cut full-colour pixels onto the dimmed base
-      // Draw full image clipped to hold shapes
+      var full=document.createElement('canvas');
+      full.width=wc.width; full.height=wc.height;
+      full.getContext('2d').drawImage(wallImg,0,0,wc.width,wc.height);
       ctx.save();
-      ctx.globalCompositeOperation='source-over';
-      // Clip to the combined hold region
       ctx.beginPath();
       acl.holds.forEach(function(entry){
         var hid=typeof entry==='object'?entry.id:entry;
@@ -890,6 +888,7 @@ function drawWall(){
       ctx.restore();
     }
   } else {
+    dimmedWallCache=null; // clear cache when not needed
     ctx.drawImage(wallImg,0,0,wc.width,wc.height);
   }
 }
@@ -1414,6 +1413,7 @@ function selClimb(id){
   }
   active=id;
   climbMode='view';
+  dimmedWallCache=null; // force rebuild of dimmed wall for new climb
   renderList(); updateDetail();
   var alreadyOnWall=(currentTab==='wall');
   if(!alreadyOnWall){
