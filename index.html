@@ -273,6 +273,11 @@ canvas{display:block}
     </div>
     <span class="phase-pill pp-setup" id="pillSetup" style="display:none">Setup</span>
     <span class="phase-pill pp-climb" id="pillClimb" style="display:none">Climbs</span>
+    <!-- Back button shown when viewing a climb on wall tab -->
+    <div id="backToClimbs" onclick="backToClimbsList()" style="display:none;align-items:center;gap:4px;color:#6ab4ff;font-size:13px;cursor:pointer;padding:4px 2px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <span id="backClimbName" style="font-weight:500;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    </div>
   </div>
   <div class="top-bar-right">
     <span class="sync-badge" id="saveBadge" style="display:none"></span>
@@ -814,10 +819,17 @@ function loadPhoto(e){
   reader.readAsDataURL(f);
 }
 function sizeCanvases(){
+  if(!wallImg) return;
+  // The wall tab must be visible for clientWidth to be correct.
+  // If it's not active, temporarily measure via offsetParent trick
   var area=document.getElementById('ca');
-  var mw=area.clientWidth-4, mh=area.clientHeight-4;
+  var mw=area.offsetWidth||window.innerWidth;
+  var mh=area.offsetHeight||(window.innerHeight - 52 - 56); // minus top-bar and tab-bar
+  if(mw<10) mw=window.innerWidth;
+  if(mh<10) mh=window.innerHeight - 52 - 56;
   var r=Math.min(mw/wallImg.width, mh/wallImg.height, 1);
   var w=Math.round(wallImg.width*r), h=Math.round(wallImg.height*r);
+  if(w<1||h<1) return;
   ['wallCanvas','paintCanvas','overlayCanvas','cursorCanvas'].forEach(function(id){
     var c=document.getElementById(id); c.width=w; c.height=h; c._r=r;
   });
@@ -1250,16 +1262,21 @@ function switchTab(name){
     document.getElementById('tab-'+t).classList.toggle('active',t===name);
     document.getElementById('tabn-'+t).classList.toggle('active',t===name);
   });
-  // FAB only on climbs tab when in climb phase
-  var showFab=name==='climbs'&&phase==='climb';
   var fab=document.getElementById('fab');
-  fab.classList.toggle('visible',showFab);
-  // Action bars
+  fab.classList.toggle('visible', name==='climbs'&&phase==='climb');
   document.getElementById('actionSetup').classList.toggle('visible', name==='wall'&&phase==='setup');
   document.getElementById('actionClimb').classList.toggle('visible', name==='wall'&&phase==='climb'&&climbMode==='place'&&!!active);
+  if(name==='wall'&&wallImg){
+    // Redraw after tab becomes visible — use rAF so layout has settled
+    requestAnimationFrame(function(){
+      sizeCanvases();
+      drawWall();
+      drawOverlay();
+    });
+  }
   if(name==='stats') renderStats();
   if(name==='setup') updateSetupTab();
-  if(name==='wall'&&phase==='climb'&&active) hint('Tap holds to assign them. Use type buttons to set Hand · Foot · Start · Finish.');
+  updateBackBtn();
 }
 
 function goMapHolds(){
@@ -1326,7 +1343,10 @@ function resetSetup(){
 function setMode(m){
   climbMode=m;
   var placing=m==='place'&&!!active;
-  document.getElementById('overlayCanvas').style.cursor=m==='place'?'crosshair':'default';
+  // View mode: overlay shows highlights but doesn't capture taps
+  // Place mode: overlay captures taps for hold assignment
+  document.getElementById('overlayCanvas').style.pointerEvents=placing?'auto':'none';
+  document.getElementById('overlayCanvas').style.cursor=placing?'crosshair':'default';
   document.getElementById('actionClimb').classList.toggle('visible', placing&&currentTab==='wall');
 }
 
@@ -1344,18 +1364,20 @@ function setHoldType(t){
 
 function enterEditHolds(){
   if(!active) return;
-  switchTab('wall');
   setMode('place');
-  hint('Tap holds to add/remove. Use type buttons. ✓ Done when finished.');
+  // Make sure we're on the wall tab
+  if(currentTab!=='wall') switchTab('wall');
+  else document.getElementById('actionClimb').classList.add('visible');
 }
 
 function doneSelecting(){
-  active=null; stopGlow();
   climbMode='view';
   document.getElementById('actionClimb').classList.remove('visible');
-  sh('btnDoneSelecting',false);
-  renderList(); updateDetail(); drawWall(); drawOverlay();
-  hint('Climb saved. Select another or create a new one.');
+  document.getElementById('overlayCanvas').style.pointerEvents='none';
+  document.getElementById('overlayCanvas').style.cursor='default';
+  // Return to climbs tab so user can see the list and pick another
+  switchTab('climbs');
+  renderList(); updateDetail(); updateBackBtn();
 }
 
 // ─── Sidebar / climb list ────────────────────────────────────────────────────
@@ -1382,10 +1404,51 @@ function renderList(){
 function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function selClimb(id){
-  active=id; renderList(); updateDetail();
-  drawWall(); drawOverlay();
-  if(active){ startGlow(); setMode('place'); }
-  else { stopGlow(); document.getElementById('actionClimb').classList.remove('visible'); }
+  if(active===id){
+    active=null; stopGlow(); climbMode='view';
+    document.getElementById('actionClimb').classList.remove('visible');
+    renderList(); updateDetail();
+    drawWall(); drawOverlay();
+    updateBackBtn();
+    return;
+  }
+  active=id;
+  climbMode='view';
+  renderList(); updateDetail();
+  var alreadyOnWall=(currentTab==='wall');
+  if(!alreadyOnWall){
+    currentTab='wall';
+    ['wall','climbs','setup','stats'].forEach(function(t){
+      document.getElementById('tab-'+t).classList.toggle('active',t==='wall');
+      document.getElementById('tabn-'+t).classList.toggle('active',t==='wall');
+    });
+    document.getElementById('fab').classList.remove('visible');
+    document.getElementById('actionSetup').classList.remove('visible');
+    document.getElementById('actionClimb').classList.remove('visible');
+  }
+  updateBackBtn();
+  requestAnimationFrame(function(){
+    sizeCanvases();
+    drawWall();
+    drawOverlay();
+    startGlow();
+  });
+}
+
+function backToClimbsList(){
+  switchTab('climbs');
+  updateBackBtn();
+}
+
+function updateBackBtn(){
+  var cl=active?climbs.find(function(c){return c.id===active;}):null;
+  var show=!!cl&&currentTab==='wall'&&phase==='climb';
+  var el=document.getElementById('backToClimbs');
+  var nameEl=document.getElementById('backClimbName');
+  if(el) el.style.display=show?'flex':'none';
+  if(cl&&nameEl) nameEl.textContent=cl.name;
+  var chipEl=document.querySelector('.wall-chip');
+  if(chipEl) chipEl.style.display=show?'none':'flex';
 }
 
 function updateDetail(){
@@ -1476,8 +1539,10 @@ function saveClimb(){
   var fa=document.getElementById('iFA').value.trim();
   var id=Date.now().toString();
   climbs.push({id:id,name:name,grade:grade,fa:fa,holds:[],attempts:0,sends:0,created:new Date().toISOString()});
-  closeModal(); active=id; setMode('place');
+  closeModal(); active=id;
   renderList(); updateDetail(); save(); startGlow();
+  // Switch to wall tab in place mode so user can immediately assign holds
+  setMode('place');
   switchTab('wall');
 }
 
