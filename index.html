@@ -32,7 +32,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 }
 
 /* canvas layers */
-.canvas-wrap{position:relative;display:inline-block;line-height:0}
+.canvas-wrap{position:relative;display:inline-block;line-height:0;transform-origin:0 0;touch-action:none}
 canvas{display:block}
 #paintCanvas{position:absolute;top:0;left:0}
 #overlayCanvas{position:absolute;top:0;left:0;pointer-events:none}
@@ -314,6 +314,10 @@ html.mobile .fab:active{transform:scale(0.93)}
   <!-- Setup controls -->
   <span class="phase-pill pp-setup" id="d-pillSetup" style="display:none">Setup</span>
   <span class="poly-count-pill" id="d-polyCount" style="display:none"></span>
+  <button id="d-btnZoomOut" onclick="zoomBy(-0.25)" style="display:none">－</button>
+  <span class="lbl" id="d-zoomLabel" style="display:none;min-width:38px;text-align:center">100%</span>
+  <button id="d-btnZoomIn" onclick="zoomBy(0.25)" style="display:none">＋</button>
+  <button id="d-btnZoomReset" onclick="zoomReset()" style="display:none" title="Reset zoom">⟲</button>
   <button id="d-btnUndo" onclick="undoStep()" style="display:none" class="red">↩ Undo</button>
   <button id="d-btnClear" onclick="clearPaint(true)" style="display:none" class="red">✕ Clear</button>
   <button id="d-btnPolyClose" onclick="closePolygon()" style="display:none" class="green">Close polygon</button>
@@ -509,6 +513,9 @@ html.mobile .fab:active{transform:scale(0.93)}
 <!-- Mobile action bars -->
 <div class="action-bar m-only" id="actionSetup">
   <span class="poly-count-pill" id="polyCount"></span>
+  <button class="abtn" onclick="zoomBy(-0.25)">－</button>
+  <span class="lbl" id="zoomLabel" style="font-size:11px;color:#888;min-width:34px;text-align:center">100%</span>
+  <button class="abtn" onclick="zoomBy(0.25)">＋</button>
   <button class="abtn red" onclick="undoStep()">↩ Undo</button>
   <button class="abtn red" onclick="clearPaint(true)">✕ Clear</button>
   <button class="abtn green" id="btnPolyClose" onclick="closePolygon()" style="display:none">Close polygon</button>
@@ -636,6 +643,11 @@ var glowPhase=0, animFrame=null;
 var painting=false;
 var polyPts=[];
 var snapshots=[];
+
+// ─── Zoom/pan state (setup mode only) ──────────────────────────────────────
+var zoomLevel=1;
+var panX=0, panY=0;
+var MIN_ZOOM=1, MAX_ZOOM=5;
 
 var CLIMB_COLORS=['#e53935','#1976d2','#388e3c','#f57c00','#7b1fa2','#00838f','#c62828','#283593','#558b2f','#e91e8c'];
 var PAINT_COLOR='rgba(255,200,0,0.88)';
@@ -805,7 +817,9 @@ async function renameWall(id){
   var name=prompt('Rename wall:', w.name);
   if(!name||name===w.name) return;
   w.name=name;
-  if(id===activeWallId) ['wallNameTag','wallNameTag2'].forEach(function(id){var e=document.getElementById(id);if(e) e.textContent=name;
+  if(id===activeWallId){
+    ['wallNameTag','wallNameTag2'].forEach(function(tid){ var e=document.getElementById(tid); if(e) e.textContent=name; });
+  }
   renderWallsList();
   try{ await sbUpsert('walls',{id:w.id, name:w.name, holds:w.holds, climbs:w.climbs, updated_at:new Date().toISOString()}); }catch(e){}
 }
@@ -821,7 +835,7 @@ async function deleteWall(id){
     if(walls.length>0){ await loadWallById(walls[0].id, false); }
     else{
       activeWallId=null; wallImg=null; wallDataUrl=null; holds=[]; climbs=[]; active=null;
-      ['wallNameTag','wallNameTag2'].forEach(function(id){var e=document.getElementById(id);if(e) e.textContent='Walls';
+      ['wallNameTag','wallNameTag2'].forEach(function(tid){ var e=document.getElementById(tid); if(e) e.textContent='Walls'; });
       document.getElementById('np').style.display='flex';
       document.getElementById('cw').style.display='none';
       setPhase('empty');
@@ -893,7 +907,7 @@ function loadPhoto(e){
     var name=prompt('Name this wall:', 'My Wall')||'My Wall';
     var w={id:'wall_'+Date.now(), name:name, photo:null, photo_url:null, holds:[], climbs:[]};
     walls.push(w); activeWallId=w.id;
-    ['wallNameTag','wallNameTag2'].forEach(function(id){var e=document.getElementById(id);if(e) e.textContent=name;
+    ['wallNameTag','wallNameTag2'].forEach(function(tid){ var e=document.getElementById(tid); if(e) e.textContent=name; });
   }
   var reader=new FileReader();
   reader.onload=async function(ev){
@@ -996,6 +1010,110 @@ function drawWall(){
   }
 }
 
+// ─── Zoom / pan (setup mode) ────────────────────────────────────────────────
+function applyTransform(){
+  var cw=document.getElementById('cw');
+  if(cw) cw.style.transform='translate('+panX+'px,'+panY+'px) scale('+zoomLevel+')';
+  var lbl=zoomLevel===1?'100%':Math.round(zoomLevel*100)+'%';
+  ['zoomLabel','d-zoomLabel'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=lbl; });
+}
+
+function clampPan(){
+  // Keep some of the wall always visible — simple clamp based on canvas size and zoom
+  var c=document.getElementById('wallCanvas');
+  if(!c||!c.width) return;
+  var areaId=IS_MOBILE?'ca-mobile':'ca';
+  var area=document.getElementById(areaId);
+  if(!area) return;
+  var scaledW=c.width*zoomLevel, scaledH=c.height*zoomLevel;
+  var maxPanX=Math.max(0,(scaledW-area.offsetWidth)/2 + area.offsetWidth*0.15);
+  var maxPanY=Math.max(0,(scaledH-area.offsetHeight)/2 + area.offsetHeight*0.15);
+  panX=Math.max(-maxPanX,Math.min(maxPanX,panX));
+  panY=Math.max(-maxPanY,Math.min(maxPanY,panY));
+}
+
+function zoomBy(delta){
+  zoomTo(zoomLevel+delta);
+}
+
+function zoomTo(newZoom, anchorX, anchorY){
+  var old=zoomLevel;
+  zoomLevel=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,newZoom));
+  if(zoomLevel===old){ applyTransform(); return; }
+  // If an anchor point given (pinch/wheel centre), adjust pan so that point stays fixed
+  if(anchorX!==undefined&&anchorY!==undefined){
+    var scaleChange=zoomLevel/old;
+    panX=anchorX-(anchorX-panX)*scaleChange;
+    panY=anchorY-(anchorY-panY)*scaleChange;
+  }
+  clampPan();
+  applyTransform();
+}
+
+function zoomReset(){
+  zoomLevel=1; panX=0; panY=0;
+  applyTransform();
+}
+
+// Mouse wheel zoom (desktop) — only active during setup
+function setupWheelZoom(){
+  var area=document.getElementById('ca');
+  if(!area) return;
+  area.addEventListener('wheel',function(e){
+    if(phase!=='setup') return;
+    e.preventDefault();
+    var rect=area.getBoundingClientRect();
+    var cx=e.clientX-rect.left-rect.width/2;
+    var cy=e.clientY-rect.top-rect.height/2;
+    var delta=e.deltaY<0?0.15:-0.15;
+    zoomTo(zoomLevel+delta, cx-panX, cy-panY);
+  },{passive:false});
+}
+
+// Pinch-to-zoom + two-finger pan (mobile) — only active during setup
+var pinchState=null; // {startDist, startZoom, startPanX, startPanY, midX, midY}
+function setupPinchZoom(){
+  var areaId=IS_MOBILE?'ca-mobile':'ca';
+  var area=document.getElementById(areaId);
+  if(!area) return;
+
+  area.addEventListener('touchstart',function(e){
+    if(phase!=='setup') return;
+    if(e.touches.length===2){
+      e.preventDefault();
+      var t1=e.touches[0], t2=e.touches[1];
+      var rect=area.getBoundingClientRect();
+      var dist=Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
+      var midX=(t1.clientX+t2.clientX)/2-rect.left-rect.width/2;
+      var midY=(t1.clientY+t2.clientY)/2-rect.top-rect.height/2;
+      pinchState={startDist:dist, startZoom:zoomLevel, startPanX:panX, startPanY:panY, midX:midX, midY:midY};
+    }
+  },{passive:false});
+
+  area.addEventListener('touchmove',function(e){
+    if(phase!=='setup'||!pinchState) return;
+    if(e.touches.length===2){
+      e.preventDefault();
+      var t1=e.touches[0], t2=e.touches[1];
+      var dist=Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
+      var scale=dist/pinchState.startDist;
+      var newZoom=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,pinchState.startZoom*scale));
+      var scaleChange=newZoom/pinchState.startZoom;
+      panX=pinchState.midX-(pinchState.midX-pinchState.startPanX)*scaleChange;
+      panY=pinchState.midY-(pinchState.midY-pinchState.startPanY)*scaleChange;
+      zoomLevel=newZoom;
+      clampPan();
+      applyTransform();
+    }
+  },{passive:false});
+
+  area.addEventListener('touchend',function(e){
+    if(e.touches.length<2) pinchState=null;
+  });
+}
+setupWheelZoom();
+setupPinchZoom();
+
 // ─── Paint canvas helpers ─────────────────────────────────────────────────────
 function getPaintCtx(){ return document.getElementById('paintCanvas').getContext('2d'); }
 function getPaintCanvas(){ return document.getElementById('paintCanvas'); }
@@ -1026,7 +1144,14 @@ function clearPaint(interactive){
 function ptFrom(e, canvas){
   var rect=canvas.getBoundingClientRect();
   var src=e.touches?e.touches[0]:e;
-  return {x:src.clientX-rect.left, y:src.clientY-rect.top};
+  // rect reflects the CSS transform (zoom), but canvas.width/height is the
+  // unscaled buffer — convert client coords into buffer-space coordinates.
+  var scaleX=canvas.width/rect.width;
+  var scaleY=canvas.height/rect.height;
+  return {
+    x:(src.clientX-rect.left)*scaleX,
+    y:(src.clientY-rect.top)*scaleY
+  };
 }
 
 // ─── POLYGON tool ─────────────────────────────────────────────────────────────
@@ -1419,7 +1544,7 @@ function setPhase(p){
   var acEl=document.getElementById('actionClimb'); if(acEl) acEl.classList.remove('visible');
   var fab=document.getElementById('fab'); if(fab) fab.classList.toggle('visible', c&&currentTab==='climbs');
   // Desktop toolbar buttons
-  ['d-btnUndo','d-btnClear','d-btnPolyClose','d-sepDone','d-btnDoneSetup','d-btnResetSetup'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=s?'':'none'; });
+  ['d-btnUndo','d-btnClear','d-btnPolyClose','d-sepDone','d-btnDoneSetup','d-btnResetSetup','d-btnZoomOut','d-zoomLabel','d-btnZoomIn','d-btnZoomReset'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=s?'':'none'; });
   ['d-pillClimb','d-btnPlace','d-btnView','d-lblHoldType','d-btnTypeHand','d-btnTypeFoot','d-btnTypeStart','d-btnTypeFinish','d-btnDoneSelecting','d-sepNew','d-btnNew'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=c?'':'none'; });
   // Sidebar label
   var st=document.getElementById('d-sideTitle'); if(st) st.textContent=s?'Holds':'Climbs';
@@ -1429,8 +1554,10 @@ function setPhase(p){
     var clEl2=document.getElementById('d-clist'); if(clEl2) clEl2.innerHTML='<div class="d-empty">Click to place polygon vertices.<br>Double-click to close & save each hold.<br><br>Click a saved outline to delete it.</div>';
     var dpEl=document.getElementById('dp'); if(dpEl) dpEl.classList.remove('visible');
     var ddp=document.getElementById('d-dp'); if(ddp) ddp.style.display='none';
+    zoomReset();
   } else {
     renderList();
+    zoomReset();
   }
   updateSideCnt();
   updateSetupTab();
