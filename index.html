@@ -17,96 +17,21 @@
 html,body{height:100%;overflow:hidden}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#000;color:#e8e8e6;display:flex;flex-direction:column}
 
-/* ── Safe area / env() ──────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   SHARED VARIABLES & BASE
+══════════════════════════════════════════════════════════ */
 :root{
-  --sat: env(safe-area-inset-top, 0px);
-  --sab: env(safe-area-inset-bottom, 0px);
-  --sal: env(safe-area-inset-left, 0px);
-  --sar: env(safe-area-inset-right, 0px);
-  --tab-h: 56px;
-  --top-h: 52px;
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);
+  --sar:env(safe-area-inset-right,0px);
+  --tab-h:56px;
+  --top-h:52px;
+  --tb-h:44px;   /* desktop toolbar height */
+  --sb-w:224px;  /* desktop sidebar width */
 }
 
-/* ── Top bar ────────────────────────────────────────────── */
-.top-bar{
-  height:calc(var(--top-h) + var(--sat));
-  padding-top:var(--sat);
-  background:#111;
-  border-bottom:0.5px solid #2a2a2a;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding-left:max(16px, var(--sal));
-  padding-right:max(16px, var(--sar));
-  flex-shrink:0;
-  z-index:10;
-}
-.top-bar-left{display:flex;align-items:center;gap:10px}
-.wall-chip{display:flex;align-items:center;gap:6px;background:#1e1e1e;border:0.5px solid #333;border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500;color:#ddd;cursor:pointer;max-width:180px}
-.wall-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wall-chip svg{flex-shrink:0;opacity:0.5}
-.top-bar-right{display:flex;align-items:center;gap:8px}
-.sync-badge{font-size:11px;border-radius:20px;padding:3px 9px;border:0.5px solid;font-weight:500}
-.icon-btn{width:34px;height:34px;border-radius:50%;background:#1e1e1e;border:0.5px solid #333;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#aaa;font-size:16px}
-.icon-btn:active{background:#2a2a2a}
-
-/* ── Context action bar (above tab bar, phase-specific) ─── */
-.action-bar{
-  position:fixed;
-  bottom:calc(var(--tab-h) + var(--sab));
-  left:0;right:0;
-  background:#161616;
-  border-top:0.5px solid #2a2a2a;
-  padding:8px max(12px,var(--sal)) 8px max(12px,var(--sal));
-  display:none;
-  gap:8px;
-  align-items:center;
-  flex-wrap:wrap;
-  z-index:20;
-}
-.action-bar.visible{display:flex}
-.abtn{font-size:13px;padding:7px 14px;border-radius:22px;border:0.5px solid #3a3a3a;background:#222;color:#ccc;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-weight:500;white-space:nowrap;min-height:36px}
-.abtn:active{opacity:0.75}
-.abtn.on{background:#1a3a5c;border-color:#3a7abd;color:#6ab4ff}
-.abtn.green{background:#1a3a1a;border-color:#3a7a3a;color:#6dbf6d}
-.abtn.red{border-color:#7a2020;color:#ff6b6b}
-.abtn.blue{background:#1a3a5c;border-color:#3a7abd;color:#6ab4ff}
-.poly-count-pill{font-size:11px;background:#1a3a5c;color:#6ab4ff;border:0.5px solid #3a7abd;border-radius:20px;padding:3px 9px;font-weight:500;display:none}
-
-/* hold type buttons — compact */
-.type-group{display:flex;gap:5px;align-items:center}
-.tbtn{font-size:12px;padding:5px 10px;border-radius:20px;border:0.5px solid #3a3a3a;background:#222;color:#888;cursor:pointer;white-space:nowrap}
-.tbtn.on{color:#fff;font-weight:500}
-.tbtn.on-hand{background:#1a3a5c;border-color:#3a7abd;color:#6ab4ff}
-.tbtn.on-foot{background:#2a1e0a;border-color:#c8942a;color:#f9a825}
-.tbtn.on-start{background:#0a2a0a;border-color:#3a7a3a;color:#4caf50}
-.tbtn.on-finish{background:#2a0a0a;border-color:#7a2020;color:#ef5350}
-
-/* ── Main canvas tab ────────────────────────────────────── */
-.tab-content{
-  position:fixed;
-  top:calc(var(--top-h) + var(--sat));
-  left:0;right:0;
-  bottom:calc(var(--tab-h) + var(--sab));
-  display:none;
-  flex-direction:column;
-  background:#000;
-  overflow:hidden;
-}
-.tab-content.active{display:flex}
-
-/* Canvas area fills everything */
-.canvas-area{
-  flex:1;
-  position:relative;
-  background:#0a0a0a;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  user-select:none;
-  touch-action:none;
-}
+/* canvas layers */
 .canvas-wrap{position:relative;display:inline-block;line-height:0}
 canvas{display:block}
 #paintCanvas{position:absolute;top:0;left:0}
@@ -117,109 +42,33 @@ canvas{display:block}
 .nophoto p{font-size:15px;color:#888;font-weight:500}
 .nophoto small{font-size:12px;color:#444}
 
-/* ── Climbs tab ─────────────────────────────────────────── */
-.climbs-tab{
-  display:flex;
-  flex-direction:column;
-  background:#111;
-  overflow:hidden;
-}
-.climbs-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid #222}
-.climbs-header h2{font-size:17px;font-weight:600}
-.climbs-list{flex:1;overflow-y:auto;padding:10px 12px;-webkit-overflow-scrolling:touch}
-.ccard{padding:14px;border-radius:14px;border:0.5px solid #252525;margin-bottom:10px;cursor:pointer;background:#1a1a1a;active:opacity:.8}
-.ccard.sel{border-color:#3a7abd;background:#0d1f30}
-.cn{font-size:15px;font-weight:600;color:#eee;margin-bottom:5px}
-.cm{font-size:12px;color:#666;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+/* shared pills */
 .cpill{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;border:0.5px solid}
 .cpg{background:#0a1e30;color:#6ab4ff;border-color:#1a4a7a}
 .cps{background:#0a200a;color:#6dbf6d;border-color:#1a5a1a}
 .cpp{background:#20180a;color:#c8942a;border-color:#5a3a10}
-.empty{padding:40px 20px;text-align:center;font-size:14px;color:#444;line-height:2}
-
-/* Climb detail sheet */
-.detail-sheet{background:#161616;border-top:0.5px solid #2a2a2a;padding:14px 16px;display:none}
-.detail-sheet.visible{display:block}
-.detail-sheet h3{font-size:15px;font-weight:600;margin-bottom:10px;color:#eee}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.detail-cell{background:#1e1e1e;border-radius:10px;padding:10px 12px;border:0.5px solid #252525}
-.detail-cell .lbl{font-size:10px;color:#555;margin-bottom:3px}
-.detail-cell .val{font-size:14px;font-weight:600;color:#ddd}
-.detail-actions{display:flex;gap:8px}
-.detail-actions button{flex:1;padding:10px;border-radius:12px;font-size:13px;font-weight:500;border:0.5px solid;background:#1e1e1e;color:#aaa;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
-.detail-actions button:active{opacity:0.7}
-.dbtn-attempt{border-color:#3a3a3a!important}
-.dbtn-send{border-color:#3a7a3a!important;color:#6dbf6d!important}
-.dbtn-edit{border-color:#3a3a3a!important}
-.dbtn-holds{border-color:#3a7abd!important;color:#6ab4ff!important}
-.dbtn-del{border-color:#7a2020!important;color:#ff6b6b!important}
-.legend-row{font-size:10px;color:#444;margin-top:10px;display:flex;gap:10px;flex-wrap:wrap}
+.phase-pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;border:0.5px solid}
+.pp-setup{background:#2a200a;color:#c8942a;border-color:#5a4010}
+.pp-climb{background:#0a2a0a;color:#6dbf6d;border-color:#1a5a1a}
+.sync-badge{font-size:11px;border-radius:20px;padding:3px 9px;border:0.5px solid;font-weight:500}
 .legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;vertical-align:middle;border:1.5px solid}
 
-/* ── Setup tab ──────────────────────────────────────────── */
-.setup-tab{background:#111;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px}
-.setup-section{margin-bottom:20px}
-.setup-section h3{font-size:13px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
-.setup-row{background:#1a1a1a;border:0.5px solid #252525;border-radius:14px;padding:14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer}
-.setup-row:active{opacity:.7}
-.setup-row-left{display:flex;flex-direction:column;gap:3px}
-.setup-row-title{font-size:14px;font-weight:500;color:#ddd}
-.setup-row-sub{font-size:12px;color:#555}
-.setup-row-right{font-size:13px;color:#555;display:flex;align-items:center;gap:6px}
-.setup-row-right .arrow{font-size:16px;color:#333}
+/* modal (shared) */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;align-items:flex-end;justify-content:center}
+.modal.open{display:flex}
+.mbox{background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px 20px calc(20px + var(--sab));width:100%;max-width:480px;display:flex;flex-direction:column;gap:14px}
+.mbox-handle{width:36px;height:4px;background:#3a3a3a;border-radius:2px;margin:0 auto -4px}
+.mbox h3{font-size:17px;font-weight:600;color:#eee}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;color:#666;font-weight:500}
+.field input,.field select{font-size:16px;padding:12px 14px;border-radius:12px;border:0.5px solid #3a3a3a;background:#2a2a2a;color:#eee;width:100%;-webkit-appearance:none}
+.field select option{background:#2a2a2a}
+.mact{display:flex;gap:10px}
+.mact button{flex:1;padding:13px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;border:none}
+.mact-cancel{background:#2a2a2a;color:#888}
+.mact-save{background:#3a7abd;color:#fff}
 
-/* ── Stats tab ──────────────────────────────────────────── */
-.stats-tab{background:#111;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.stat-card{background:#1a1a1a;border:0.5px solid #252525;border-radius:14px;padding:14px}
-.stat-card .sc-val{font-size:26px;font-weight:700;color:#eee;margin-bottom:2px}
-.stat-card .sc-lbl{font-size:11px;color:#555}
-.grade-bars{background:#1a1a1a;border:0.5px solid #252525;border-radius:14px;padding:14px;margin-bottom:10px}
-.grade-bars h4{font-size:13px;color:#666;margin-bottom:10px}
-.gb-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.gb-lbl{font-size:11px;color:#666;width:28px;text-align:right;flex-shrink:0}
-.gb-bar-wrap{flex:1;height:8px;background:#222;border-radius:4px;overflow:hidden}
-.gb-bar{height:100%;background:#3a7abd;border-radius:4px}
-.gb-cnt{font-size:11px;color:#555;width:18px}
-
-/* ── Tab bar ────────────────────────────────────────────── */
-.tab-bar{
-  position:fixed;
-  bottom:0;left:0;right:0;
-  height:calc(var(--tab-h) + var(--sab));
-  padding-bottom:var(--sab);
-  background:#111;
-  border-top:0.5px solid #2a2a2a;
-  display:flex;
-  z-index:30;
-}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding-bottom:2px;color:#555;font-size:10px;font-weight:500;transition:color .15s}
-.tab svg{width:24px;height:24px;stroke:#555;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
-.tab.active{color:#6ab4ff}
-.tab.active svg{stroke:#6ab4ff}
-
-/* FAB */
-.fab{
-  position:fixed;
-  bottom:calc(var(--tab-h) + var(--sab) + 14px);
-  right:18px;
-  width:52px;height:52px;
-  border-radius:50%;
-  background:#3a7abd;
-  color:#fff;
-  font-size:26px;
-  display:none;
-  align-items:center;justify-content:center;
-  box-shadow:0 4px 16px rgba(58,122,189,0.5);
-  cursor:pointer;
-  z-index:25;
-  border:none;
-  line-height:1;
-}
-.fab.visible{display:flex}
-.fab:active{transform:scale(0.93)}
-
-/* ── Walls panel (slide in) ─────────────────────────────── */
+/* walls panel (shared) */
 .wp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:299}
 .wp-overlay.open{display:block}
 .walls-panel{position:fixed;top:0;left:0;width:min(300px,85vw);height:100%;background:#161616;border-right:0.5px solid #2a2a2a;z-index:300;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .25s ease;box-shadow:6px 0 32px rgba(0,0,0,.6)}
@@ -229,75 +78,276 @@ canvas{display:block}
 .wp-list{flex:1;overflow-y:auto;padding:10px}
 .wcard{padding:12px;border-radius:12px;border:0.5px solid #252525;margin-bottom:8px;cursor:pointer;background:#1e1e1e;display:flex;align-items:center;gap:10px}
 .wcard.active{border-color:#3a7abd;background:#0d1f30}
-.wcard-thumb{width:48px;height:40px;border-radius:8px;background:#2a2a2a;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;object-fit:cover}
+.wcard-thumb{width:48px;height:40px;border-radius:8px;background:#2a2a2a;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden}
 .wcard-info{flex:1;min-width:0}
 .wcard-name{font-size:13px;font-weight:600;color:#ddd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wcard-meta{font-size:11px;color:#555;margin-top:2px}
 .wcard-actions{display:flex;gap:4px}
 .wcard-btn{padding:5px 7px;border:none;background:none;cursor:pointer;color:#444;border-radius:6px;font-size:14px}
-.wcard-btn:active{color:#aaa}
 .wp-foot{padding:12px 16px calc(12px + var(--sab));border-top:0.5px solid #2a2a2a}
 .wp-foot-btn{width:100%;padding:12px;border-radius:12px;background:#1a3a1a;border:0.5px solid #3a7a3a;color:#6dbf6d;font-size:14px;font-weight:500;cursor:pointer;text-align:center}
 
-/* ── Modal ──────────────────────────────────────────────── */
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;align-items:flex-end;justify-content:center;padding:0}
-.modal.open{display:flex}
-.mbox{background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px 20px calc(20px + var(--sab));width:100%;max-width:540px;display:flex;flex-direction:column;gap:14px}
-.mbox-handle{width:36px;height:4px;background:#3a3a3a;border-radius:2px;margin:0 auto -6px}
-.mbox h3{font-size:17px;font-weight:600;color:#eee}
-.field{display:flex;flex-direction:column;gap:5px}
-.field label{font-size:12px;color:#666;font-weight:500}
-.field input,.field select{font-size:16px;padding:12px 14px;border-radius:12px;border:0.5px solid #3a3a3a;background:#2a2a2a;color:#eee;width:100%;-webkit-appearance:none}
-.field input:focus,.field select:focus{outline:none;border-color:#3a7abd}
-.field select option{background:#2a2a2a}
-.mact{display:flex;gap:10px}
-.mact button{flex:1;padding:13px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;border:none}
-.mact-cancel{background:#2a2a2a;color:#888}
-.mact-save{background:#3a7abd;color:#fff}
+/* ══════════════════════════════════════════════════════════
+   DESKTOP LAYOUT  (.desktop class on <html>)
+══════════════════════════════════════════════════════════ */
+html.desktop body{flex-direction:column}
 
-/* ── Phase pill (in top bar) ────────────────────────────── */
-.phase-pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;border:0.5px solid}
-.pp-setup{background:#2a200a;color:#c8942a;border-color:#5a4010}
-.pp-climb{background:#0a2a0a;color:#6dbf6d;border-color:#1a5a1a}
+/* desktop toolbar */
+html.desktop .d-toolbar{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 12px;
+  background:#1a1a1a;border-bottom:1px solid #2e2e2e;
+  flex-wrap:wrap;min-height:var(--tb-h);flex-shrink:0;
+}
+html.desktop .d-toolbar button{
+  font-size:12px;padding:4px 10px;border-radius:7px;border:1px solid #3a3a3a;
+  background:#242424;color:#d0d0ce;cursor:pointer;
+  display:inline-flex;align-items:center;gap:3px;line-height:1;white-space:nowrap;
+}
+html.desktop .d-toolbar button:hover{background:#2e2e2e}
+html.desktop .d-toolbar button.on{background:#1a3a5c;border-color:#3a7abd;color:#6ab4ff}
+html.desktop .d-toolbar button.red{border-color:#7a2020;color:#ff6b6b}
+html.desktop .d-toolbar button.green{background:#1a3a1a;border-color:#3a7a3a;color:#6dbf6d}
+html.desktop .d-toolbar button.blue{background:#1a3a5c;border-color:#3a7abd;color:#6ab4ff}
+html.desktop .d-toolbar .sep{width:1px;height:20px;background:#2e2e2e;margin:0 1px;flex-shrink:0}
+html.desktop .d-toolbar .lbl{font-size:11px;color:#666;white-space:nowrap}
+html.desktop .poly-count-pill{font-size:10px;background:#1a3a5c;color:#6ab4ff;border:0.5px solid #3a7abd;border-radius:20px;padding:2px 8px}
+
+/* desktop main area */
+html.desktop .d-main{display:flex;flex:1;min-height:0;overflow:hidden}
+html.desktop .d-canvas-area{
+  flex:1;position:relative;background:#0a0a0a;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  user-select:none;
+}
+html.desktop .d-sidebar{
+  width:var(--sb-w);border-left:1px solid #2e2e2e;
+  display:flex;flex-direction:column;background:#161616;flex-shrink:0;
+}
+html.desktop .d-sh{
+  padding:9px 12px;border-bottom:1px solid #2e2e2e;
+  font-size:13px;font-weight:600;color:#e8e8e6;
+  display:flex;justify-content:space-between;align-items:center;
+}
+html.desktop .d-clist{flex:1;overflow-y:auto;padding:5px}
+html.desktop .d-ccard{
+  padding:8px 10px;border-radius:8px;border:1px solid #2e2e2e;
+  margin-bottom:4px;cursor:pointer;background:#1e1e1e;
+}
+html.desktop .d-ccard:hover{border-color:#3a3a3a}
+html.desktop .d-ccard.sel{border-color:#3a7abd;background:#1a2e40}
+html.desktop .d-cn{font-size:12px;font-weight:600;color:#e8e8e6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.desktop .d-cm{font-size:10px;color:#666;margin-top:2px;display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+html.desktop .d-dp{
+  padding:9px 12px;border-top:1px solid #2e2e2e;
+  font-size:11px;color:#666;display:flex;flex-direction:column;gap:5px;
+}
+html.desktop .d-dr{display:flex;justify-content:space-between;align-items:center}
+html.desktop .d-dv{font-size:12px;font-weight:600;color:#e8e8e6}
+html.desktop .d-dbtns{display:flex;gap:4px;margin-top:4px}
+html.desktop .d-dbtns button{
+  flex:1;font-size:11px;padding:5px 3px;justify-content:center;
+  border-radius:7px;border:1px solid #3a3a3a;background:#1e1e1e;color:#aaa;cursor:pointer;
+  display:flex;align-items:center;gap:3px;
+}
+html.desktop .d-dbtns button:hover{background:#2a2a2a}
+html.desktop .d-hint{
+  font-size:11px;color:#555;padding:5px 12px;
+  background:#111;border-top:1px solid #1e1e1e;min-height:25px;
+}
+html.desktop .d-legend{font-size:10px;color:#444;margin-top:4px;display:flex;gap:8px;flex-wrap:wrap}
+html.desktop .d-empty{padding:14px;text-align:center;font-size:11px;color:#444;line-height:1.8}
+
+/* hide mobile elements on desktop */
+html.desktop .m-only{display:none!important}
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE LAYOUT  (.mobile class on <html>)
+══════════════════════════════════════════════════════════ */
+html.mobile .d-toolbar,.html.mobile .d-main,.html.mobile .d-sidebar,
+html.mobile .d-canvas-area,.html.mobile .d-hint{display:none!important}
+html.mobile .d-only{display:none!important}
+
+/* mobile top bar */
+html.mobile .top-bar{
+  height:calc(var(--top-h) + var(--sat));padding-top:var(--sat);
+  background:#111;border-bottom:0.5px solid #2a2a2a;
+  display:flex;align-items:center;justify-content:space-between;
+  padding-left:max(16px,var(--sal));padding-right:max(16px,var(--sar));
+  flex-shrink:0;z-index:10;
+}
+html.mobile .top-bar-left{display:flex;align-items:center;gap:10px}
+html.mobile .wall-chip{display:flex;align-items:center;gap:6px;background:#1e1e1e;border:0.5px solid #333;border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500;color:#ddd;cursor:pointer;max-width:175px}
+html.mobile .wall-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.mobile .top-bar-right{display:flex;align-items:center;gap:8px}
+html.mobile .icon-btn{width:34px;height:34px;border-radius:50%;background:#1e1e1e;border:0.5px solid #333;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#aaa;font-size:16px}
+
+/* mobile tab contents */
+html.mobile .tab-content{
+  position:fixed;
+  top:calc(var(--top-h) + var(--sat));left:0;right:0;
+  bottom:calc(var(--tab-h) + var(--sab));
+  display:none;flex-direction:column;background:#000;overflow:hidden;
+}
+html.mobile .tab-content.active{display:flex}
+html.mobile .canvas-area{
+  flex:1;position:relative;background:#0a0a0a;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;user-select:none;touch-action:none;
+}
+
+/* mobile action bar */
+html.mobile .action-bar{
+  position:fixed;bottom:calc(var(--tab-h) + var(--sab));left:0;right:0;
+  background:#161616;border-top:0.5px solid #2a2a2a;
+  padding:8px max(12px,var(--sal)) 8px;
+  display:none;gap:8px;align-items:center;flex-wrap:wrap;z-index:20;
+}
+html.mobile .action-bar.visible{display:flex}
+html.mobile .abtn{
+  font-size:13px;padding:7px 14px;border-radius:22px;
+  border:0.5px solid #3a3a3a;background:#222;color:#ccc;
+  cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+  font-weight:500;white-space:nowrap;min-height:36px;
+}
+html.mobile .abtn.green{background:#1a3a1a;border-color:#3a7a3a;color:#6dbf6d}
+html.mobile .abtn.red{border-color:#7a2020;color:#ff6b6b}
+html.mobile .poly-count-pill{font-size:11px;background:#1a3a5c;color:#6ab4ff;border:0.5px solid #3a7abd;border-radius:20px;padding:3px 9px;font-weight:500;display:none}
+html.mobile .tbtn{font-size:12px;padding:5px 10px;border-radius:20px;border:0.5px solid #3a3a3a;background:#222;color:#888;cursor:pointer;white-space:nowrap}
+html.mobile .tbtn.on-hand{background:#1a3a5c;border-color:#3a7abd;color:#6ab4ff}
+html.mobile .tbtn.on-foot{background:#2a1e0a;border-color:#c8942a;color:#f9a825}
+html.mobile .tbtn.on-start{background:#0a2a0a;border-color:#3a7a3a;color:#4caf50}
+html.mobile .tbtn.on-finish{background:#2a0a0a;border-color:#7a2020;color:#ef5350}
+
+/* mobile climbs tab */
+html.mobile .climbs-tab{display:flex;flex-direction:column;background:#111;overflow:hidden;flex:1}
+html.mobile .climbs-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid #222}
+html.mobile .climbs-header h2{font-size:17px;font-weight:600}
+html.mobile .climbs-list{flex:1;overflow-y:auto;padding:10px 12px;-webkit-overflow-scrolling:touch}
+html.mobile .ccard{padding:14px;border-radius:14px;border:0.5px solid #252525;margin-bottom:10px;cursor:pointer;background:#1a1a1a}
+html.mobile .ccard.sel{border-color:#3a7abd;background:#0d1f30}
+html.mobile .cn{font-size:15px;font-weight:600;color:#eee;margin-bottom:5px}
+html.mobile .cm{font-size:12px;color:#666;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+html.mobile .empty{padding:40px 20px;text-align:center;font-size:14px;color:#444;line-height:2}
+
+/* mobile detail sheet */
+html.mobile .detail-sheet{background:#161616;border-top:0.5px solid #2a2a2a;padding:14px 16px;display:none}
+html.mobile .detail-sheet.visible{display:block}
+html.mobile .detail-sheet h3{font-size:15px;font-weight:600;margin-bottom:10px;color:#eee}
+html.mobile .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+html.mobile .detail-cell{background:#1e1e1e;border-radius:10px;padding:10px 12px;border:0.5px solid #252525}
+html.mobile .detail-cell .lbl{font-size:10px;color:#555;margin-bottom:3px}
+html.mobile .detail-cell .val{font-size:14px;font-weight:600;color:#ddd}
+html.mobile .detail-actions{display:flex;gap:8px;flex-wrap:wrap}
+html.mobile .detail-actions button{
+  flex:1;min-width:60px;padding:10px 6px;border-radius:12px;font-size:13px;font-weight:500;
+  border:0.5px solid #333;background:#1e1e1e;color:#aaa;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+}
+html.mobile .dbtn-send{border-color:#3a7a3a!important;color:#6dbf6d!important}
+html.mobile .dbtn-holds{border-color:#3a7abd!important;color:#6ab4ff!important}
+html.mobile .dbtn-del{border-color:#7a2020!important;color:#ff6b6b!important}
+html.mobile .legend-row{font-size:10px;color:#444;margin-top:8px;display:flex;gap:10px;flex-wrap:wrap}
+
+/* mobile setup tab */
+html.mobile .setup-tab{background:#111;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;flex:1}
+html.mobile .setup-section{margin-bottom:20px}
+html.mobile .setup-section h3{font-size:13px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+html.mobile .setup-row{background:#1a1a1a;border:0.5px solid #252525;border-radius:14px;padding:14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer}
+html.mobile .setup-row:active{opacity:.7}
+html.mobile .setup-row-left{display:flex;flex-direction:column;gap:3px}
+html.mobile .setup-row-title{font-size:14px;font-weight:500;color:#ddd}
+html.mobile .setup-row-sub{font-size:12px;color:#555}
+html.mobile .setup-row-right{font-size:16px;color:#333}
+
+/* mobile stats tab */
+html.mobile .stats-tab{background:#111;overflow-y:auto;padding:16px;flex:1}
+html.mobile .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+html.mobile .stat-card{background:#1a1a1a;border:0.5px solid #252525;border-radius:14px;padding:14px}
+html.mobile .stat-card .sc-val{font-size:26px;font-weight:700;color:#eee;margin-bottom:2px}
+html.mobile .stat-card .sc-lbl{font-size:11px;color:#555}
+html.mobile .grade-bars{background:#1a1a1a;border:0.5px solid #252525;border-radius:14px;padding:14px;margin-bottom:10px}
+html.mobile .grade-bars h4{font-size:13px;color:#666;margin-bottom:10px}
+html.mobile .gb-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+html.mobile .gb-lbl{font-size:11px;color:#666;width:28px;text-align:right;flex-shrink:0}
+html.mobile .gb-bar-wrap{flex:1;height:8px;background:#222;border-radius:4px;overflow:hidden}
+html.mobile .gb-bar{height:100%;background:#3a7abd;border-radius:4px}
+html.mobile .gb-cnt{font-size:11px;color:#555;width:18px}
+
+/* mobile tab bar */
+html.mobile .tab-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(var(--tab-h) + var(--sab));padding-bottom:var(--sab);
+  background:#111;border-top:0.5px solid #2a2a2a;
+  display:flex;z-index:30;
+}
+html.mobile .tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;cursor:pointer;padding-bottom:2px;
+  color:#555;font-size:10px;font-weight:500;
+}
+html.mobile .tab svg{width:24px;height:24px;stroke:#555;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+html.mobile .tab.active{color:#6ab4ff}
+html.mobile .tab.active svg{stroke:#6ab4ff}
+html.mobile .fab{
+  position:fixed;bottom:calc(var(--tab-h) + var(--sab) + 14px);right:18px;
+  width:52px;height:52px;border-radius:50%;background:#3a7abd;color:#fff;
+  font-size:26px;display:none;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(58,122,189,0.5);cursor:pointer;z-index:25;border:none;
+}
+html.mobile .fab.visible{display:flex}
+html.mobile .fab:active{transform:scale(0.93)}
 </style>
 </head>
 <body>
 
-<!-- ── Top bar ─────────────────────────────────────────── -->
-<div class="top-bar">
-  <div class="top-bar-left">
-    <div class="wall-chip" onclick="openWallsPanel()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l4-8 4 4 4-6 4 10"/></svg>
-      <span id="wallNameTag">Walls</span>
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
-    <span class="phase-pill pp-setup" id="pillSetup" style="display:none">Setup</span>
-    <span class="phase-pill pp-climb" id="pillClimb" style="display:none">Climbs</span>
-    <!-- Back button shown when viewing a climb on wall tab -->
-    <div id="backToClimbs" onclick="backToClimbsList()" style="display:none;align-items:center;gap:4px;color:#6ab4ff;font-size:13px;cursor:pointer;padding:4px 2px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-      <span id="backClimbName" style="font-weight:500;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-    </div>
-  </div>
-  <div class="top-bar-right">
-    <span class="sync-badge" id="saveBadge" style="display:none"></span>
-    <div class="icon-btn" onclick="exportData()" title="Export">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    </div>
-  </div>
+<!-- ══════════════════════════════════════════════════════
+     DESKTOP LAYOUT
+══════════════════════════════════════════════════════════ -->
+<div class="d-toolbar d-only" id="d-toolbar">
+  <button onclick="openWallsPanel()" style="gap:5px">
+    🏔 <span id="wallNameTag2">Walls</span> ▾
+  </button>
+  <button onclick="document.getElementById('fi').click()">📷 Load photo</button>
+  <div class="sep"></div>
+
+  <!-- Setup controls -->
+  <span class="phase-pill pp-setup" id="d-pillSetup" style="display:none">Setup</span>
+  <span class="poly-count-pill" id="d-polyCount" style="display:none"></span>
+  <button id="d-btnUndo" onclick="undoStep()" style="display:none" class="red">↩ Undo</button>
+  <button id="d-btnClear" onclick="clearPaint(true)" style="display:none" class="red">✕ Clear</button>
+  <button id="d-btnPolyClose" onclick="closePolygon()" style="display:none" class="green">Close polygon</button>
+  <div class="sep" id="d-sepDone" style="display:none"></div>
+  <button id="d-btnDoneSetup" onclick="finishSetup()" style="display:none" class="green">✓ Done (<span id="holdCountTb">0</span>)</button>
+  <button id="d-btnResetSetup" onclick="resetSetup()" style="display:none" class="red" title="Reset holds">⚙ Reset</button>
+
+  <!-- Climb controls -->
+  <span class="phase-pill pp-climb" id="d-pillClimb" style="display:none">Climbs</span>
+  <button id="d-btnPlace" class="on" onclick="setMode('place')" style="display:none">📍 Place</button>
+  <button id="d-btnView" onclick="setMode('view')" style="display:none">👁 View</button>
+  <span class="lbl" id="d-lblHoldType" style="display:none">Type:</span>
+  <button id="d-btnTypeHand"   onclick="setHoldType('hand')"   class="on blue" style="display:none">✋ Hand</button>
+  <button id="d-btnTypeFoot"   onclick="setHoldType('foot')"   style="display:none">🦶 Foot</button>
+  <button id="d-btnTypeStart"  onclick="setHoldType('start')"  style="display:none">🟢 Start</button>
+  <button id="d-btnTypeFinish" onclick="setHoldType('finish')" style="display:none">🔴 Finish</button>
+  <button id="d-btnDoneSelecting" onclick="doneSelecting()" class="green" style="display:none">✓ Done</button>
+  <div class="sep" id="d-sepNew" style="display:none"></div>
+  <button id="d-btnNew" onclick="openModal()" style="display:none">＋ New climb</button>
+
+  <div class="sep"></div>
+  <button onclick="exportData()">⬇ Export</button>
+  <button onclick="document.getElementById('importFile').click()">⬆ Import</button>
+  <span class="sync-badge" id="saveBadge" style="display:none"></span>
 </div>
 
-<!-- ── Tab contents ────────────────────────────────────── -->
-
-<!-- Wall tab (canvas) -->
-<div class="tab-content active" id="tab-wall">
-  <div class="canvas-area" id="ca">
+<div class="d-main d-only">
+  <div class="d-canvas-area" id="ca">
     <div class="nophoto" id="np" onclick="document.getElementById('fi').click()">
       <div class="nophoto-icon">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       </div>
       <p>Load your wall photo</p>
-      <small>Tap to choose a photo, then polygon-trace each hold</small>
+      <small>Then polygon-trace each hold</small>
     </div>
     <div class="canvas-wrap" id="cw" style="display:none">
       <canvas id="wallCanvas"></canvas>
@@ -306,31 +356,99 @@ canvas{display:block}
       <canvas id="cursorCanvas"></canvas>
     </div>
   </div>
+
+  <div class="d-sidebar">
+    <div class="d-sh">
+      <span id="d-sideTitle">Holds</span>
+      <span id="d-sideCnt" style="font-weight:400;color:#555;font-size:11px"></span>
+    </div>
+    <div class="d-clist" id="d-clist">
+      <div class="d-empty">Load a wall photo to begin.</div>
+    </div>
+    <div class="d-dp" id="d-dp" style="display:none">
+      <div class="d-dr"><span>Grade</span><span class="d-dv" id="d-dg">—</span></div>
+      <div class="d-dr"><span>FA</span><span class="d-dv" id="d-dfa" style="font-size:11px">—</span></div>
+      <div class="d-dr"><span>Holds</span><span class="d-dv" id="d-dh" style="font-size:10px;font-weight:400;color:#aaa">—</span></div>
+      <div class="d-dr"><span>Attempts</span><span class="d-dv" id="d-da">—</span></div>
+      <div class="d-dr"><span>Sends</span><span class="d-dv" id="d-ds">—</span></div>
+      <div class="d-dbtns">
+        <button onclick="logAttempt()">🎯 Attempt</button>
+        <button onclick="logSend()" style="color:#6dbf6d;border-color:#3a7a3a">✓ Send</button>
+        <button onclick="enterEditHolds()">✏ Holds</button>
+        <button onclick="editClimb()">⚙</button>
+        <button onclick="delClimb()" style="color:#ff6b6b;border-color:#7a2020">🗑</button>
+      </div>
+      <div class="d-legend" style="margin-top:8px">
+        <span><span class="legend-dot" style="background:#6ab4ff44;border-color:#6ab4ff"></span>Hand</span>
+        <span><span class="legend-dot" style="background:#f9a82544;border-color:#f9a825;border-style:dashed"></span>Foot</span>
+        <span><span class="legend-dot" style="background:#4caf5044;border-color:#4caf50"></span>Start</span>
+        <span><span class="legend-dot" style="background:#ef535044;border-color:#ef5350"></span>Finish</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="d-hint d-only" id="d-hint">Load a wall photo to get started.</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MOBILE LAYOUT
+══════════════════════════════════════════════════════════ -->
+<div class="top-bar m-only">
+  <div class="top-bar-left">
+    <div class="wall-chip" onclick="openWallsPanel()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l4-8 4 4 4-6 4 10"/></svg>
+      <span id="wallNameTag">Walls</span>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <span class="phase-pill pp-setup" id="pillSetup" style="display:none">Setup</span>
+    <span class="phase-pill pp-climb" id="pillClimb" style="display:none">Climbs</span>
+    <div id="backToClimbs" onclick="backToClimbsList()" style="display:none;align-items:center;gap:4px;color:#6ab4ff;font-size:13px;cursor:pointer;padding:4px 2px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <span id="backClimbName" style="font-weight:500;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    </div>
+  </div>
+  <div class="top-bar-right">
+    <span class="sync-badge" id="saveBadgeMobile" style="display:none"></span>
+    <div class="icon-btn" onclick="exportData()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </div>
+  </div>
 </div>
 
-<!-- Climbs tab -->
-<div class="tab-content" id="tab-climbs">
-  <div class="climbs-tab" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<!-- Mobile tab contents -->
+<div class="tab-content active m-only" id="tab-wall">
+  <div class="canvas-area" id="ca-mobile">
+    <div class="nophoto" id="np-mobile" onclick="document.getElementById('fi').click()">
+      <div class="nophoto-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </div>
+      <p>Load your wall photo</p>
+      <small>Map holds on desktop, then log climbs here</small>
+    </div>
+    <!-- canvas-wrap inserted by JS into whichever #ca is active -->
+  </div>
+</div>
+<div class="tab-content m-only" id="tab-climbs">
+  <div class="climbs-tab">
     <div class="climbs-header">
       <h2>Climbs <span id="sideCnt" style="font-size:14px;font-weight:400;color:#555"></span></h2>
     </div>
     <div class="climbs-list" id="clist">
-      <div class="empty">No climbs yet.<br>Map your holds first, then tap<br>＋ to create a climb.</div>
+      <div class="empty">No climbs yet. Tap ＋ to add one.</div>
     </div>
     <div class="detail-sheet" id="dp">
       <h3 id="dp-name">—</h3>
       <div class="detail-grid">
         <div class="detail-cell"><div class="lbl">Grade</div><div class="val" id="dg">—</div></div>
-        <div class="detail-cell"><div class="lbl">FA</div><div class="val" id="dfa" style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div></div>
+        <div class="detail-cell"><div class="lbl">FA</div><div class="val" id="dfa" style="font-size:12px">—</div></div>
         <div class="detail-cell"><div class="lbl">Attempts</div><div class="val" id="da">—</div></div>
         <div class="detail-cell"><div class="lbl">Sends</div><div class="val" id="ds">—</div></div>
       </div>
-      <div class="detail-cell" style="margin-bottom:12px"><div class="lbl">Holds</div><div class="val" style="font-size:13px;font-weight:400;color:#aaa" id="dh">—</div></div>
+      <div class="detail-cell" style="margin-bottom:10px"><div class="lbl">Holds</div><div class="val" style="font-size:12px;font-weight:400;color:#aaa" id="dh">—</div></div>
       <div class="detail-actions">
-        <button class="dbtn-attempt" onclick="logAttempt()">🎯 Attempt</button>
+        <button onclick="logAttempt()">🎯</button>
         <button class="dbtn-send" onclick="logSend()">✓ Send</button>
         <button class="dbtn-holds" onclick="enterEditHolds()">✏ Holds</button>
-        <button class="dbtn-edit" onclick="editClimb()">⚙</button>
+        <button onclick="editClimb()">⚙</button>
         <button class="dbtn-del" onclick="delClimb()">🗑</button>
       </div>
       <div class="legend-row">
@@ -342,9 +460,7 @@ canvas{display:block}
     </div>
   </div>
 </div>
-
-<!-- Setup tab -->
-<div class="tab-content" id="tab-setup">
+<div class="tab-content m-only" id="tab-setup">
   <div class="setup-tab">
     <div class="setup-section">
       <h3>Wall photo</h3>
@@ -353,66 +469,54 @@ canvas{display:block}
           <div class="setup-row-title">Load / replace photo</div>
           <div class="setup-row-sub" id="photoStatus">No photo loaded</div>
         </div>
-        <div class="setup-row-right"><span>📷</span><span class="arrow">›</span></div>
+        <div class="setup-row-right">›</div>
       </div>
     </div>
     <div class="setup-section">
       <h3>Hold mapping</h3>
-      <div class="setup-row" id="setupStartRow" onclick="goMapHolds()">
+      <div class="setup-row" onclick="goMapHolds()">
         <div class="setup-row-left">
           <div class="setup-row-title">Map holds</div>
           <div class="setup-row-sub" id="holdStatus">No holds mapped yet</div>
         </div>
-        <div class="setup-row-right"><span>⬡</span><span class="arrow">›</span></div>
+        <div class="setup-row-right">›</div>
       </div>
       <div class="setup-row" id="setupResetRow" onclick="resetSetup()" style="display:none">
         <div class="setup-row-left">
           <div class="setup-row-title" style="color:#ff6b6b">Reset hold map</div>
-          <div class="setup-row-sub">Clear all holds and climbs</div>
+          <div class="setup-row-sub">Clears all holds and climbs</div>
         </div>
-        <div class="setup-row-right"><span class="arrow">›</span></div>
+        <div class="setup-row-right">›</div>
       </div>
     </div>
     <div class="setup-section">
       <h3>Data</h3>
       <div class="setup-row" onclick="exportData()">
-        <div class="setup-row-left">
-          <div class="setup-row-title">Export wall data</div>
-          <div class="setup-row-sub">Download JSON backup</div>
-        </div>
-        <div class="setup-row-right"><span>⬇</span><span class="arrow">›</span></div>
+        <div class="setup-row-left"><div class="setup-row-title">Export wall data</div><div class="setup-row-sub">JSON backup</div></div>
+        <div class="setup-row-right">›</div>
       </div>
       <div class="setup-row" onclick="document.getElementById('importFile').click()">
-        <div class="setup-row-left">
-          <div class="setup-row-title">Import wall data</div>
-          <div class="setup-row-sub">Restore from JSON</div>
-        </div>
-        <div class="setup-row-right"><span>⬆</span><span class="arrow">›</span></div>
+        <div class="setup-row-left"><div class="setup-row-title">Import wall data</div><div class="setup-row-sub">Restore from JSON</div></div>
+        <div class="setup-row-right">›</div>
       </div>
     </div>
   </div>
 </div>
-
-<!-- Stats tab -->
-<div class="tab-content" id="tab-stats">
+<div class="tab-content m-only" id="tab-stats">
   <div class="stats-tab" id="statsContent"></div>
 </div>
 
-<!-- ── Context action bars ─────────────────────────────── -->
-
-<!-- Setup mapping bar -->
-<div class="action-bar" id="actionSetup">
+<!-- Mobile action bars -->
+<div class="action-bar m-only" id="actionSetup">
   <span class="poly-count-pill" id="polyCount"></span>
-  <button class="abtn" onclick="undoStep()">↩ Undo</button>
-  <button class="abtn" onclick="clearPaint(true)">✕ Clear</button>
+  <button class="abtn red" onclick="undoStep()">↩ Undo</button>
+  <button class="abtn red" onclick="clearPaint(true)">✕ Clear</button>
   <button class="abtn green" id="btnPolyClose" onclick="closePolygon()" style="display:none">Close polygon</button>
   <div style="flex:1"></div>
-  <button class="abtn green" onclick="finishSetup()">✓ Done (<span id="holdCountTb">0</span>)</button>
+  <button class="abtn green" onclick="finishSetup()">✓ Done (<span id="m-holdCountTb">0</span>)</button>
 </div>
-
-<!-- Climb placing bar -->
-<div class="action-bar" id="actionClimb">
-  <div class="type-group">
+<div class="action-bar m-only" id="actionClimb">
+  <div style="display:flex;gap:5px">
     <button class="tbtn on on-hand" id="btnTypeHand"   onclick="setHoldType('hand')">✋</button>
     <button class="tbtn" id="btnTypeFoot"   onclick="setHoldType('foot')">🦶</button>
     <button class="tbtn" id="btnTypeStart"  onclick="setHoldType('start')">🟢</button>
@@ -422,47 +526,37 @@ canvas{display:block}
   <button class="abtn green" onclick="doneSelecting()">✓ Done</button>
 </div>
 
-<!-- ── FAB ────────────────────────────────────────────── -->
-<button class="fab" id="fab" onclick="openModal()">＋</button>
+<!-- Mobile FAB -->
+<button class="fab m-only" id="fab" onclick="openModal()">＋</button>
 
-<!-- ── Tab bar ───────────────────────────────────────── -->
-<div class="tab-bar">
+<!-- Mobile tab bar -->
+<div class="tab-bar m-only">
   <div class="tab active" id="tabn-wall" onclick="switchTab('wall')">
-    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-    Wall
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Wall
   </div>
   <div class="tab" id="tabn-climbs" onclick="switchTab('climbs')">
-    <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-    Climbs
+    <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>Climbs
   </div>
   <div class="tab" id="tabn-setup" onclick="switchTab('setup')">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    Setup
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Setup
   </div>
   <div class="tab" id="tabn-stats" onclick="switchTab('stats')">
-    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-    Stats
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Stats
   </div>
 </div>
 
-<!-- ── Walls panel ────────────────────────────────────── -->
+<!-- Shared: walls panel, file inputs, modal -->
 <div class="wp-overlay" id="wpOverlay" onclick="closeWallsPanel()"></div>
 <div class="walls-panel" id="wallsPanel">
   <div class="wp-head">
     <h2>My Walls</h2>
-    <button onclick="closeWallsPanel()" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px">✕</button>
+    <button onclick="closeWallsPanel()" style="background:none;border:none;color:#666;font-size:20px;cursor:pointer">✕</button>
   </div>
   <div class="wp-list" id="wpList"></div>
-  <div class="wp-foot">
-    <button class="wp-foot-btn" onclick="newWall()">＋ Add new wall</button>
-  </div>
+  <div class="wp-foot"><button class="wp-foot-btn" onclick="newWall()">＋ Add new wall</button></div>
 </div>
-
-<!-- file inputs -->
 <input type="file" id="fi" accept="image/*" style="display:none" onchange="loadPhoto(event)">
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-
-<!-- ── Modal (bottom sheet style) ────────────────────── -->
 <div class="modal" id="modal">
   <div class="mbox">
     <div class="mbox-handle"></div>
@@ -483,6 +577,7 @@ canvas{display:block}
     </div>
   </div>
 </div>
+
 
 <script>
 // ─── Supabase config ──────────────────────────────────────────────────────────
@@ -582,7 +677,9 @@ var isSyncing=false;
 
 // ─── Sync status indicator ────────────────────────────────────────────────────
 function setSyncStatus(s){
-  var b=document.getElementById('saveBadge');
+  var ids=['saveBadge','saveBadgeMobile'];
+  ids.forEach(function(id){
+  var b=document.getElementById(id); if(!b) return;
   var map={connecting:'⟳ Connecting…', syncing:'⟳ Saving…', synced:'✓ Synced', offline:'⚠ Offline'};
   var col={connecting:'#888', syncing:'#c8942a', synced:'#6dbf6d', offline:'#ff6b6b'};
   b.style.display='inline-flex';
@@ -591,6 +688,7 @@ function setSyncStatus(s){
   b.style.borderColor=col[s]||'#888';
   b.style.background='transparent';
   if(s==='synced') setTimeout(function(){b.style.display='none';},2000);
+  }); // end forEach
 }
 
 // ─── Save: debounced push to Supabase ─────────────────────────────────────────
@@ -638,7 +736,7 @@ async function loadWallById(id, isRestore){
   active=null;
   stopGlow();
   localStorage.setItem('swm_activeWall',id);
-  document.getElementById('wallNameTag').textContent=w.name;
+  ['wallNameTag','wallNameTag2'].forEach(function(id){var e=document.getElementById(id);if(e) e.textContent=w.name;});
 
   // Photo: use cached dataUrl or fetch from storage URL
   if(w.photo){
@@ -707,7 +805,7 @@ async function renameWall(id){
   var name=prompt('Rename wall:', w.name);
   if(!name||name===w.name) return;
   w.name=name;
-  if(id===activeWallId) document.getElementById('wallNameTag').textContent=name;
+  if(id===activeWallId) ['wallNameTag','wallNameTag2'].forEach(function(id){var e=document.getElementById(id);if(e) e.textContent=name;
   renderWallsList();
   try{ await sbUpsert('walls',{id:w.id, name:w.name, holds:w.holds, climbs:w.climbs, updated_at:new Date().toISOString()}); }catch(e){}
 }
@@ -723,7 +821,7 @@ async function deleteWall(id){
     if(walls.length>0){ await loadWallById(walls[0].id, false); }
     else{
       activeWallId=null; wallImg=null; wallDataUrl=null; holds=[]; climbs=[]; active=null;
-      document.getElementById('wallNameTag').textContent='Walls';
+      ['wallNameTag','wallNameTag2'].forEach(function(id){var e=document.getElementById(id);if(e) e.textContent='Walls';
       document.getElementById('np').style.display='flex';
       document.getElementById('cw').style.display='none';
       setPhase('empty');
@@ -780,8 +878,14 @@ function flash(id){ setSyncStatus('synced'); } // legacy alias
 
 // ─── Photo ────────────────────────────────────────────────────────────────────
 function showCanvases(){
-  document.getElementById('np').style.display='none';
-  document.getElementById('cw').style.display='inline-block';
+  // Desktop
+  var np=document.getElementById('np'), cw=document.getElementById('cw');
+  if(np) np.style.display='none';
+  if(cw) cw.style.display='inline-block';
+  // Mobile — move canvas-wrap into the mobile canvas area
+  var npM=document.getElementById('np-mobile'), caM=document.getElementById('ca-mobile');
+  if(npM) npM.style.display='none';
+  if(caM && cw && !caM.contains(cw)){ caM.appendChild(cw); }
 }
 function loadPhoto(e){
   var f=e.target.files[0]; if(!f) return;
@@ -789,7 +893,7 @@ function loadPhoto(e){
     var name=prompt('Name this wall:', 'My Wall')||'My Wall';
     var w={id:'wall_'+Date.now(), name:name, photo:null, photo_url:null, holds:[], climbs:[]};
     walls.push(w); activeWallId=w.id;
-    document.getElementById('wallNameTag').textContent=name;
+    ['wallNameTag','wallNameTag2'].forEach(function(id){var e=document.getElementById(id);if(e) e.textContent=name;
   }
   var reader=new FileReader();
   reader.onload=async function(ev){
@@ -820,11 +924,10 @@ function loadPhoto(e){
 }
 function sizeCanvases(){
   if(!wallImg) return;
-  // The wall tab must be visible for clientWidth to be correct.
-  // If it's not active, temporarily measure via offsetParent trick
-  var area=document.getElementById('ca');
+  var areaId=IS_MOBILE?'ca-mobile':'ca';
+  var area=document.getElementById(areaId);
   var mw=area.offsetWidth||window.innerWidth;
-  var mh=area.offsetHeight||(window.innerHeight - 52 - 56); // minus top-bar and tab-bar
+  var mh=area.offsetHeight||(window.innerHeight - (IS_MOBILE?52+56:44)); // minus bars
   if(mw<10) mw=window.innerWidth;
   if(mh<10) mh=window.innerHeight - 52 - 56;
   var r=Math.min(mw/wallImg.width, mh/wallImg.height, 1);
@@ -959,12 +1062,15 @@ function closePolygon(){
 }
 
 function updatePolyUI(){
-  var pc=document.getElementById('polyCount');
-  var cb=document.getElementById('btnPolyClose');
   var haspts=polyPts.length>0;
-  pc.style.display=haspts?'inline-flex':'none';
-  if(haspts) pc.textContent=polyPts.length+' pts';
-  if(cb) cb.style.display=haspts?'':'none';
+  ['polyCount','d-polyCount'].forEach(function(id){
+    var el=document.getElementById(id); if(!el) return;
+    el.style.display=haspts?'inline-flex':'none';
+    if(haspts) el.textContent=polyPts.length+' pts';
+  });
+  ['btnPolyClose','d-btnPolyClose'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display=haspts?'':'none';
+  });
 }
 
 // ─── Cursor preview ───────────────────────────────────────────────────────────
@@ -1293,26 +1399,36 @@ function updateSetupTab(){
   if(resetRow) resetRow.style.display=holds.length>0?'':'none';
 }
 
-// ─── Phase management (tab-aware) ────────────────────────────────────────────
+// ─── Phase management ─────────────────────────────────────────────────────────
 function setPhase(p){
   phase=p;
   var s=p==='setup', c=p==='climb';
-  var el;
-  el=document.getElementById('pillSetup'); if(el) el.style.display=s?'':'none';
-  el=document.getElementById('pillClimb'); if(el) el.style.display=c?'':'none';
-  document.getElementById('paintCanvas').style.pointerEvents=s?'auto':'none';
-  document.getElementById('paintCanvas').style.cursor=s?'crosshair':'default';
-  document.getElementById('overlayCanvas').style.pointerEvents=c?'auto':'none';
-  document.getElementById('overlayCanvas').style.cursor=c?'crosshair':'default';
-  document.getElementById('holdCountTb').textContent=holds.length;
-  document.getElementById('actionSetup').classList.toggle('visible', s&&currentTab==='wall');
-  document.getElementById('actionClimb').classList.toggle('visible', false);
-  var fab=document.getElementById('fab');
-  fab.classList.toggle('visible', c&&currentTab==='climbs');
+  // Phase pills — desktop and mobile
+  ['pillSetup','d-pillSetup'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=s?'':'none'; });
+  ['pillClimb','d-pillClimb'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=c?'':'none'; });
+  // Canvas pointer events
+  var pc=document.getElementById('paintCanvas');
+  if(pc){ pc.style.pointerEvents=s?'auto':'none'; pc.style.cursor=s?'crosshair':'default'; }
+  var oc=document.getElementById('overlayCanvas');
+  if(oc){ oc.style.pointerEvents=c&&climbMode==='place'?'auto':'none'; oc.style.cursor='default'; }
+  // Hold count badges
+  var hct=holds.length.toString();
+  ['holdCountTb','m-holdCountTb'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=hct; });
+  // Mobile action bars
+  var asEl=document.getElementById('actionSetup'); if(asEl) asEl.classList.toggle('visible', s&&currentTab==='wall');
+  var acEl=document.getElementById('actionClimb'); if(acEl) acEl.classList.remove('visible');
+  var fab=document.getElementById('fab'); if(fab) fab.classList.toggle('visible', c&&currentTab==='climbs');
+  // Desktop toolbar buttons
+  ['d-btnUndo','d-btnClear','d-btnPolyClose','d-sepDone','d-btnDoneSetup','d-btnResetSetup'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=s?'':'none'; });
+  ['d-pillClimb','d-btnPlace','d-btnView','d-lblHoldType','d-btnTypeHand','d-btnTypeFoot','d-btnTypeStart','d-btnTypeFinish','d-btnDoneSelecting','d-sepNew','d-btnNew'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=c?'':'none'; });
+  // Sidebar label
+  var st=document.getElementById('d-sideTitle'); if(st) st.textContent=s?'Holds':'Climbs';
   if(s){
     polyPts=[];
-    document.getElementById('clist').innerHTML='<div class="empty">Holding map in progress.<br>Switch to Wall tab to trace holds.</div>';
+    var clEl=document.getElementById('clist'); if(clEl) clEl.innerHTML='<div class="empty">Mapping holds...<br>Use polygon tool on wall.</div>';
+    var clEl2=document.getElementById('d-clist'); if(clEl2) clEl2.innerHTML='<div class="d-empty">Click to place polygon vertices.<br>Double-click to close & save each hold.<br><br>Click a saved outline to delete it.</div>';
     var dpEl=document.getElementById('dp'); if(dpEl) dpEl.classList.remove('visible');
+    var ddp=document.getElementById('d-dp'); if(ddp) ddp.style.display='none';
   } else {
     renderList();
   }
@@ -1321,8 +1437,8 @@ function setPhase(p){
 }
 function sh(id,v){ var el=document.getElementById(id); if(el) el.style.display=v?'':'none'; }
 function updateSideCnt(){
-  var el=document.getElementById('sideCnt');
-  if(el) el.textContent='('+climbs.length+')';
+  var cnt='('+climbs.length+')';
+  ['sideCnt','d-sideCnt'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=cnt; });
 }
 
 // ─── Setup actions ────────────────────────────────────────────────────────────
@@ -1342,11 +1458,17 @@ function resetSetup(){
 function setMode(m){
   climbMode=m;
   var placing=m==='place'&&!!active;
-  // View mode: overlay shows highlights but doesn't capture taps
-  // Place mode: overlay captures taps for hold assignment
-  document.getElementById('overlayCanvas').style.pointerEvents=placing?'auto':'none';
-  document.getElementById('overlayCanvas').style.cursor=placing?'crosshair':'default';
-  document.getElementById('actionClimb').classList.toggle('visible', placing&&currentTab==='wall');
+  var oc=document.getElementById('overlayCanvas');
+  if(oc){ oc.style.pointerEvents=placing?'auto':'none'; oc.style.cursor=placing?'crosshair':'default'; }
+  // Mobile action bar
+  var acEl=document.getElementById('actionClimb'); if(acEl) acEl.classList.toggle('visible', placing&&currentTab==='wall');
+  // Desktop toolbar place/view buttons
+  var bp=document.getElementById('d-btnPlace'); if(bp){ bp.classList.toggle('on',m==='place'); }
+  var bv=document.getElementById('d-btnView');  if(bv){ bv.classList.toggle('on',m==='view'); }
+  // Desktop type buttons & done — only when placing
+  ['d-lblHoldType','d-btnTypeHand','d-btnTypeFoot','d-btnTypeStart','d-btnTypeFinish','d-btnDoneSelecting'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display=placing?'':'none';
+  });
 }
 
 function setHoldType(t){
@@ -1405,28 +1527,32 @@ function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/
 function selClimb(id){
   if(active===id){
     active=null; stopGlow(); climbMode='view';
-    document.getElementById('actionClimb').classList.remove('visible');
+    var acEl=document.getElementById('actionClimb'); if(acEl) acEl.classList.remove('visible');
     renderList(); updateDetail();
+    setMode('view');
     drawWall(); drawOverlay();
-    updateBackBtn();
+    if(IS_MOBILE) updateBackBtn();
     return;
   }
   active=id;
   climbMode='view';
-  dimmedWallCache=null; // force rebuild of dimmed wall for new climb
+  dimmedWallCache=null;
   renderList(); updateDetail();
-  var alreadyOnWall=(currentTab==='wall');
-  if(!alreadyOnWall){
-    currentTab='wall';
-    ['wall','climbs','setup','stats'].forEach(function(t){
-      document.getElementById('tab-'+t).classList.toggle('active',t==='wall');
-      document.getElementById('tabn-'+t).classList.toggle('active',t==='wall');
-    });
-    document.getElementById('fab').classList.remove('visible');
-    document.getElementById('actionSetup').classList.remove('visible');
-    document.getElementById('actionClimb').classList.remove('visible');
+  if(IS_MOBILE){
+    // Mobile: auto-switch to wall tab
+    var alreadyOnWall=(currentTab='wall');
+    if(!alreadyOnWall){
+      currentTab='wall';
+      ['wall','climbs','setup','stats'].forEach(function(t){
+        document.getElementById('tab-'+t).classList.toggle('active',t==='wall');
+        document.getElementById('tabn-'+t).classList.toggle('active',t==='wall');
+      });
+      var fab=document.getElementById('fab'); if(fab) fab.classList.remove('visible');
+      var asEl=document.getElementById('actionSetup'); if(asEl) asEl.classList.remove('visible');
+      var acEl=document.getElementById('actionClimb'); if(acEl) acEl.classList.remove('visible');
+    }
+    updateBackBtn();
   }
-  updateBackBtn();
   requestAnimationFrame(function(){
     sizeCanvases();
     drawWall();
@@ -1453,17 +1579,29 @@ function updateBackBtn(){
 
 function updateDetail(){
   var cl=climbs.find(function(c){return c.id===active;});
+  // Mobile panel
   var dp=document.getElementById('dp');
-  if(!cl){ if(dp) dp.classList.remove('visible'); return; }
-  if(dp) dp.classList.add('visible');
+  if(!cl){ if(dp) dp.classList.remove('visible'); }
+  else { if(dp) dp.classList.add('visible'); }
+  // Desktop panel
+  var ddp=document.getElementById('d-dp');
+  if(!cl){ if(ddp) ddp.style.display='none'; return; }
+  if(ddp) ddp.style.display='flex';
   function count(t){ return cl.holds.filter(function(e){return (e.type||'hand')===t;}).length; }
+  var holdStr=count('hand')+' hand · '+count('foot')+' foot · '+count('start')+' start · '+count('finish')+' finish';
+  // Mobile
   var dpName=document.getElementById('dp-name'); if(dpName) dpName.textContent=cl.name;
-  document.getElementById('dg').textContent=cl.grade;
+  var dgEl=document.getElementById('dg'); if(dgEl) dgEl.textContent=cl.grade;
   var dfaEl=document.getElementById('dfa'); if(dfaEl) dfaEl.textContent=cl.fa||'—';
-  document.getElementById('da').textContent=cl.attempts;
-  document.getElementById('ds').textContent=cl.sends;
-  var dhEl=document.getElementById('dh');
-  if(dhEl) dhEl.textContent=count('hand')+' hand · '+count('foot')+' foot · '+count('start')+' start · '+count('finish')+' finish';
+  var daEl=document.getElementById('da'); if(daEl) daEl.textContent=cl.attempts;
+  var dsEl=document.getElementById('ds'); if(dsEl) dsEl.textContent=cl.sends;
+  var dhEl=document.getElementById('dh'); if(dhEl) dhEl.textContent=holdStr;
+  // Desktop
+  var ddg=document.getElementById('d-dg'); if(ddg) ddg.textContent=cl.grade;
+  var ddfa=document.getElementById('d-dfa'); if(ddfa) ddfa.textContent=cl.fa||'—';
+  var ddh=document.getElementById('d-dh'); if(ddh) ddh.textContent=holdStr;
+  var dda=document.getElementById('d-da'); if(dda) dda.textContent=cl.attempts;
+  var dds=document.getElementById('d-ds'); if(dds) dds.textContent=cl.sends;
 }
 
 // ─── Stats tab ────────────────────────────────────────────────────────────────
@@ -1495,7 +1633,10 @@ function renderStats(){
     +'<div class="empty" style="color:#333;padding:20px 0;font-size:12px">'+holds.length+' holds mapped on this wall</div>';
 }
 
-function hint(t){ /* hint bar removed in tab UI — no-op */ console.log('[hint]',t); }
+function hint(t){
+  var el=document.getElementById('d-hint'); if(el) el.textContent=t;
+  console.log('[hint]',t);
+}
 
 // ─── Modal — shared for create & edit ────────────────────────────────────────
 var modalMode='create'; // 'create' | 'edit'
@@ -1613,5 +1754,8 @@ if("serviceWorker" in navigator){
   });
 }
 </script>
+</body>
+</html>
+
 </body>
 </html>
