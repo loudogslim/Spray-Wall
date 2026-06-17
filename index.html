@@ -1042,6 +1042,12 @@ function drawWall(){
 }
 
 // ─── Zoom / pan (setup mode) ────────────────────────────────────────────────
+// panX/panY are the CSS-pixel offset of the canvas-wrap's top-left corner
+// relative to its natural (unscaled, centred) position. zoomLevel scales
+// around that same top-left origin via transform-origin:0 0, which is why
+// the math below treats panX/panY and zoomLevel as independent — there is
+// no compounding "anchor relative to center" step that can drift.
+
 function applyTransform(){
   var cw=document.getElementById('cw');
   if(cw) cw.style.transform='translate('+panX+'px,'+panY+'px) scale('+zoomLevel+')';
@@ -1049,36 +1055,51 @@ function applyTransform(){
   ['zoomLabel','d-zoomLabel'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=lbl; });
 }
 
+function getZoomArea(){
+  return document.getElementById(IS_MOBILE?'ca-mobile':'ca');
+}
+
 function clampPan(){
-  // Keep some of the wall always visible — simple clamp based on canvas size and zoom
   var c=document.getElementById('wallCanvas');
-  if(!c||!c.width) return;
-  var areaId=IS_MOBILE?'ca-mobile':'ca';
-  var area=document.getElementById(areaId);
-  if(!area) return;
+  var area=getZoomArea();
+  if(!c||!c.width||!area) return;
   var scaledW=c.width*zoomLevel, scaledH=c.height*zoomLevel;
-  var maxPanX=Math.max(0,(scaledW-area.offsetWidth)/2 + area.offsetWidth*0.15);
-  var maxPanY=Math.max(0,(scaledH-area.offsetHeight)/2 + area.offsetHeight*0.15);
-  panX=Math.max(-maxPanX,Math.min(maxPanX,panX));
-  panY=Math.max(-maxPanY,Math.min(maxPanY,panY));
+  var areaW=area.offsetWidth, areaH=area.offsetHeight;
+  // Allow panning until the far edge of the content reaches the near edge
+  // of the viewport, plus a little slack so you can always reach the edges.
+  var slack=80;
+  var minX=Math.min(0, areaW-scaledW)-slack;
+  var maxX=Math.max(0, areaW-scaledW)+slack;
+  var minY=Math.min(0, areaH-scaledH)-slack;
+  var maxY=Math.max(0, areaH-scaledH)+slack;
+  panX=Math.max(minX,Math.min(maxX,panX));
+  panY=Math.max(minY,Math.min(maxY,panY));
 }
 
-function zoomBy(delta){
-  zoomTo(zoomLevel+delta);
-}
-
-function zoomTo(newZoom, anchorX, anchorY){
+// Zoom while keeping a specific viewport point (clientX/Y, relative to the
+// zoom area's top-left) anchored to the same content underneath it.
+function zoomAt(newZoom, viewportX, viewportY){
   var old=zoomLevel;
-  zoomLevel=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,newZoom));
-  if(zoomLevel===old){ applyTransform(); return; }
-  // If an anchor point given (pinch/wheel centre), adjust pan so that point stays fixed
-  if(anchorX!==undefined&&anchorY!==undefined){
-    var scaleChange=zoomLevel/old;
-    panX=anchorX-(anchorX-panX)*scaleChange;
-    panY=anchorY-(anchorY-panY)*scaleChange;
-  }
+  newZoom=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,newZoom));
+  if(newZoom===old) return;
+  // Content-space point currently under the viewport point:
+  //   contentPt = (viewportPt - panOld) / zoomOld
+  // After changing zoom we want the SAME contentPt back under the SAME
+  // viewport point, so solve for panNew:
+  //   panNew = viewportPt - contentPt * zoomNew
+  var contentX=(viewportX-panX)/old;
+  var contentY=(viewportY-panY)/old;
+  zoomLevel=newZoom;
+  panX=viewportX-contentX*zoomLevel;
+  panY=viewportY-contentY*zoomLevel;
   clampPan();
   applyTransform();
+}
+
+function zoomBy(delta, viewportX, viewportY){
+  var area=getZoomArea();
+  if(viewportX===undefined&&area){ viewportX=area.offsetWidth/2; viewportY=area.offsetHeight/2; }
+  zoomAt(zoomLevel+delta, viewportX, viewportY);
 }
 
 function zoomReset(){
@@ -1086,7 +1107,9 @@ function zoomReset(){
   applyTransform();
 }
 
-// Mouse wheel zoom (desktop) — only active during setup
+// ─── Desktop: wheel to zoom, click-drag to pan ──────────────────────────────
+var dragState=null; // {startClientX, startClientY, startPanX, startPanY}
+
 function setupWheelZoom(){
   var area=document.getElementById('ca');
   if(!area) return;
@@ -1094,15 +1117,46 @@ function setupWheelZoom(){
     if(phase!=='setup') return;
     e.preventDefault();
     var rect=area.getBoundingClientRect();
-    var cx=e.clientX-rect.left-rect.width/2;
-    var cy=e.clientY-rect.top-rect.height/2;
-    var delta=e.deltaY<0?0.15:-0.15;
-    zoomTo(zoomLevel+delta, cx-panX, cy-panY);
+    var vx=e.clientX-rect.left, vy=e.clientY-rect.top;
+    var delta=e.deltaY<0?0.2:-0.2;
+    zoomAt(zoomLevel+delta, vx, vy);
   },{passive:false});
+
+  // Click-drag to pan (only when zoomed in, and not while actively placing
+  // a polygon point — we check zoomLevel>1 so normal clicks at 100% still
+  // place vertices immediately without requiring a drag gesture).
+  area.addEventListener('mousedown',function(e){
+    if(phase!=='setup'||zoomLevel<=1) return;
+    if(e.button!==0) return;
+    dragState={x:e.clientX,y:e.clientY,panX:panX,panY:panY,moved:false};
+  });
+  window.addEventListener('mousemove',function(e){
+    if(!dragState) return;
+    var dx=e.clientX-dragState.x, dy=e.clientY-dragState.y;
+    if(Math.abs(dx)>3||Math.abs(dy)>3) dragState.moved=true;
+    if(dragState.moved){
+      panX=dragState.panX+dx;
+      panY=dragState.panY+dy;
+      clampPan();
+      applyTransform();
+    }
+  });
+  window.addEventListener('mouseup',function(e){
+    if(dragState&&dragState.moved){
+      // Swallow the click that would otherwise fire after a drag, so we
+      // don't accidentally place a polygon vertex at the drag end-point.
+      var pc=getPaintCanvas();
+      var swallow=function(ev){ ev.stopPropagation(); pc.removeEventListener('click',swallow,true); };
+      pc.addEventListener('click',swallow,true);
+    }
+    dragState=null;
+  });
 }
 
-// Pinch-to-zoom + two-finger pan (mobile) — only active during setup
-var pinchState=null; // {startDist, startZoom, startPanX, startPanY, midX, midY}
+// ─── Mobile: pinch to zoom, one-finger drag to pan ──────────────────────────
+var pinchState=null;   // two-finger zoom gesture
+var panTouchState=null; // one-finger pan gesture
+
 function setupPinchZoom(){
   var areaId=IS_MOBILE?'ca-mobile':'ca';
   var area=document.getElementById(areaId);
@@ -1112,34 +1166,64 @@ function setupPinchZoom(){
     if(phase!=='setup') return;
     if(e.touches.length===2){
       e.preventDefault();
+      panTouchState=null;
       var t1=e.touches[0], t2=e.touches[1];
       var rect=area.getBoundingClientRect();
       var dist=Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
-      var midX=(t1.clientX+t2.clientX)/2-rect.left-rect.width/2;
-      var midY=(t1.clientY+t2.clientY)/2-rect.top-rect.height/2;
+      var midX=(t1.clientX+t2.clientX)/2-rect.left;
+      var midY=(t1.clientY+t2.clientY)/2-rect.top;
       pinchState={startDist:dist, startZoom:zoomLevel, startPanX:panX, startPanY:panY, midX:midX, midY:midY};
+    } else if(e.touches.length===1&&zoomLevel>1){
+      // One-finger pan only when already zoomed in — at 100% a single
+      // finger should place polygon vertices instead.
+      pinchState=null;
+      var t=e.touches[0];
+      panTouchState={x:t.clientX,y:t.clientY,panX:panX,panY:panY,moved:false};
     }
   },{passive:false});
 
   area.addEventListener('touchmove',function(e){
-    if(phase!=='setup'||!pinchState) return;
-    if(e.touches.length===2){
+    if(phase!=='setup') return;
+    if(e.touches.length===2&&pinchState){
       e.preventDefault();
       var t1=e.touches[0], t2=e.touches[1];
+      var rect=area.getBoundingClientRect();
       var dist=Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
       var scale=dist/pinchState.startDist;
       var newZoom=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,pinchState.startZoom*scale));
-      var scaleChange=newZoom/pinchState.startZoom;
-      panX=pinchState.midX-(pinchState.midX-pinchState.startPanX)*scaleChange;
-      panY=pinchState.midY-(pinchState.midY-pinchState.startPanY)*scaleChange;
+      // Keep the content point under the pinch midpoint fixed, same formula as zoomAt
+      var contentX=(pinchState.midX-pinchState.startPanX)/pinchState.startZoom;
+      var contentY=(pinchState.midY-pinchState.startPanY)/pinchState.startZoom;
       zoomLevel=newZoom;
+      panX=pinchState.midX-contentX*zoomLevel;
+      panY=pinchState.midY-contentY*zoomLevel;
       clampPan();
       applyTransform();
+    } else if(e.touches.length===1&&panTouchState){
+      e.preventDefault();
+      var t=e.touches[0];
+      var dx=t.clientX-panTouchState.x, dy=t.clientY-panTouchState.y;
+      if(Math.abs(dx)>3||Math.abs(dy)>3) panTouchState.moved=true;
+      if(panTouchState.moved){
+        panX=panTouchState.panX+dx;
+        panY=panTouchState.panY+dy;
+        clampPan();
+        applyTransform();
+      }
     }
   },{passive:false});
 
   area.addEventListener('touchend',function(e){
     if(e.touches.length<2) pinchState=null;
+    if(e.touches.length<1){
+      if(panTouchState&&panTouchState.moved){
+        // Swallow the synthetic click so a vertex doesn't get placed at the pan end-point
+        var pc=getPaintCanvas();
+        var swallow=function(ev){ ev.stopPropagation(); pc.removeEventListener('click',swallow,true); };
+        pc.addEventListener('click',swallow,true);
+      }
+      panTouchState=null;
+    }
   });
 }
 setupWheelZoom();
